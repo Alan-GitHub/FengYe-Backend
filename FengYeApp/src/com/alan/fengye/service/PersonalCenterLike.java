@@ -56,8 +56,8 @@ public class PersonalCenterLike {
 			cellData.setUploadTime(Long.valueOf(String.valueOf(map.get("uploadtime"))));
 			
 			//ÄÃµ½Í¼Æ¬ÍøÂçURLºÍ¿í¸ß
-			cellData.setPicURL(PICDIRPREFIX + String.valueOf(map.get("path")));
-			BufferedImage bufferImage = getPicSize(String.valueOf(map.get("path")));
+			cellData.setPicURL(PICDIRPREFIX + String.valueOf(map.get("path")).replaceAll("_", "/"));
+			BufferedImage bufferImage = getPicSize(String.valueOf(map.get("path")).replaceAll("_", "\\\\"));
 			cellData.setPicWidth(bufferImage.getWidth());
 			cellData.setPicHeight(bufferImage.getHeight());
 			

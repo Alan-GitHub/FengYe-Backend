@@ -34,4 +34,15 @@ public class CommentsTableOperation {
 		
 		return list;
 	}
+	
+	public int updateCommentsTableAddComment(String commentContent, int commentUserID, int workID, long curTime) 
+	{
+		
+		String sql = "insert into comments (works_id, comment_content, comment_time, user_id) values('" 
+					+ workID + "', '" + commentContent + "', '" + curTime + "', '"+ commentUserID + "');";
+
+		int ret = OperateDataBase.getInstance().generalUpdate(sql);	
+		
+		return ret;
+	}
 }

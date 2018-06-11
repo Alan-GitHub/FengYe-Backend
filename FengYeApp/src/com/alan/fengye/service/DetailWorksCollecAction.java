@@ -20,7 +20,7 @@ public class DetailWorksCollecAction {
 		this.forwardNum = 0;
 	}
 	
-	public void collectionPicture(String origUsername, String origDrawName, String username, String drawName, String picURL, String picDesc) {
+	public void collectionPicture(String origUsername, String origDrawName, String username, String drawName, String picURL, String picDesc, long curTime) {
 		
 		//拿到登录用户的用户ID
 		List<Map<String, Object>> list = UserTableOperation.getInstance().queryUsersTable(username);
@@ -33,7 +33,7 @@ public class DetailWorksCollecAction {
 		int toDrawID = Integer.parseInt(String.valueOf(map.get("id")));
 		
 		//插入数据到works表中   转采相当于自己从别人那里拷贝图片上传到后台
-		this.retValue = WorksTableOperation.getInstance().updateWorksTable(userID, toDrawID, picURL, picDesc);
+		this.retValue = WorksTableOperation.getInstance().updateWorksTable(userID, toDrawID, picURL, picDesc, curTime);
 		
 		if(this.retValue == 0)
 			return;

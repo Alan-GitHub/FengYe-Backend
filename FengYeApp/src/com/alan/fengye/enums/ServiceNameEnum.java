@@ -13,6 +13,9 @@ public enum ServiceNameEnum {
 	//Select interest group
 	INTERESTGROUPSELECTED("INTERESTGROUPSELECTED"),
 	
+	//关注或取消兴趣组
+	INTEREST_GROUP_REGARD_OR_NOT("INTEREST_GROUP_REGARD_OR_NOT"),
+	
 	//Personal Center
 	PERSONALCENTER("PERSONALCENTER"),
 	
@@ -25,6 +28,12 @@ public enum ServiceNameEnum {
 	//Personal Center -- detail drawboard 
 	PERSONALCENTER_DETAILDRAWBOARD("PERSONALCENTER_DETAILDRAWBOARD"),
 	
+	//Personal Center -- DRAWBOARD_REGARD_OR_NOT 
+	DRAWBOARD_REGARD_OR_NOT("DRAWBOARD_REGARD_OR_NOT"),
+	
+	//Personal Center -- detail drawboard 
+	WORKS_ADD_INFO("WORKS_ADD_INFO"),
+	
 	//Personal Center -- Add Drawboard
 	PERSONALCENTER_ADDDRAWBOARD("PERSONALCENTER_ADDDRAWBOARD"),
 	
@@ -36,6 +45,9 @@ public enum ServiceNameEnum {
 	
 	//Personal Center -- Attention
 	PERSONALCENTER_ATTENTION("PERSONALCENTER_ATTENTION"),
+	
+	//关注用户 或取消关注
+	USER_REGARD_OR_NOT("USER_REGARD_OR_NOT"),
 
 	//作品详情-- 喜欢或者不喜欢
 	OPERATION_WORKS_LIKEORNOT("OPERATION_WORKS_LIKEORNOT"),
@@ -52,17 +64,23 @@ public enum ServiceNameEnum {
 	//转发某作品的所有画板
 	OPERATION_WORKS_ALLFORWARD("OPERATION_WORKS_ALLFORWARD"),
 	
-	//转发某作品的所有画板
+	//某个作品的所有评论
 	OPERATION_WORKS_ALLCOMMENT("OPERATION_WORKS_ALLCOMMENT"),
+	
+	//给某个作品添加评论
+	OPERATION_WORKS_ADDCOMMENT("OPERATION_WORKS_ADDCOMMENT"), 
 	
 	//消息 -- 动态
 	MESSAGE_DYNAMIC("MESSAGE_DYNAMIC"),
 	
-	//消息 -- 动态
+	//消息 -- 私信
 	MESSAGE_PRIVATE("MESSAGE_PRIVATE"),
 	
 	//消息 -- 详细私信内容
-	MESSAGE_PRIVATE_DETAIL("MESSAGE_PRIVATE_DETAIL");
+	MESSAGE_PRIVATE_DETAIL("MESSAGE_PRIVATE_DETAIL"),
+	
+	//消息 -- 回复私信内容
+	MESSAGE_PRIVATE_DETAIL_REPLY("MESSAGE_PRIVATE_DETAIL_REPLY");
 		
 	private String code;
 	private ServiceNameEnum(String code) {

@@ -22,9 +22,9 @@ public class PersonalCenter {
 		this.headerData = new PersonalCenterHeaderData();
 	}
 	
-	public void getPersonalCenterData(String username)
+	public void getPersonalCenterData(String otherUser, String loginUser)
 	{
-		List<Map<String, Object>> list = UserTableOperation.getInstance().queryUsersTable(username);
+		List<Map<String, Object>> list = UserTableOperation.getInstance().queryUsersTable(otherUser);
 		Map<String, Object> map = list.get(0);
 		int userID = Integer.parseInt(String.valueOf(map.get("id")));
 		
@@ -61,6 +61,17 @@ public class PersonalCenter {
 		list = UserRegardTableOperation.getInstance().queryUserRegardTableForCountWithRegardUserID(userID);
 		map = list.get(0);
 		this.headerData.setFansNum(Integer.parseInt(String.valueOf(map.get("numbers"))));
+		
+		//拿到登录用户是否关注了此用户
+		list = UserTableOperation.getInstance().queryUsersTable(loginUser);
+		map = list.get(0);
+		int loginUserID = Integer.parseInt(String.valueOf(map.get("id")));
+		
+		list = UserRegardTableOperation.getInstance().queryUserRegardTableWithRegardIDAndSelfID(userID, loginUserID);
+		if(list.size() > 0)
+			this.headerData.setIsAttention(true);
+		else
+			this.headerData.setIsAttention(false);
 	}
 	
 	public int updateUserHeadIcon(String username, String headIconURL) {
@@ -71,17 +82,14 @@ public class PersonalCenter {
 		Map<String, Object> map = list.get(0);
 		int userID = Integer.parseInt(String.valueOf(map.get("id")));
 		String path = String.valueOf(map.get("head_icon"));
-	
-		if(path.isEmpty()) {
-			//路径没有，第一次上传头像
-			ret = UserTableOperation.getInstance().updateUsersTable(userID, headIconURL);
-		} else if(path.equalsIgnoreCase(headIconURL)) {
+
+		if(path.equalsIgnoreCase(headIconURL)) {
 
 			ret = 2; //路径存在，不用替换
 		} else {
-			//应该永远不会到这里来
-			ret = -1;
-		}
+			//路径没有，第一次上传头像
+			ret = UserTableOperation.getInstance().updateUsersTable(userID, headIconURL);
+		}  
 
 		return ret;
 	}

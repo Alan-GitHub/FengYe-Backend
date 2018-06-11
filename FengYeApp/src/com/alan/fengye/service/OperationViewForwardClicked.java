@@ -74,10 +74,10 @@ public class OperationViewForwardClicked {
 			//拿到画板的封面图像---画板内部第一张图片
 			listTemp = WorksTableOperation.getInstance().queryWorksTableForConver(drawID);
 			map = listTemp.get(0);
-			forwardCell.setCoverImageURL(PICDIRPREFIX + String.valueOf(map.get("path")));
+			forwardCell.setCoverImageURL(PICDIRPREFIX + String.valueOf(map.get("path")).replaceAll("_", "/"));
 			//画板封面图像的宽和高
 			BufferedImage bufferImage;
-			bufferImage = getPicSize(String.valueOf(map.get("path")));
+			bufferImage = getPicSize(String.valueOf(map.get("path")).replaceAll("_", "\\\\"));
 			forwardCell.setCoverImageWidth(bufferImage.getWidth());
 			forwardCell.setCoverImageHeight(bufferImage.getHeight());
 			

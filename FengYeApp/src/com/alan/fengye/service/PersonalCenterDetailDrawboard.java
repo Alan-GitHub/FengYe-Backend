@@ -12,6 +12,7 @@ import java.util.Vector;
 import com.alan.fengye.bean.PersonalCenterDrawboardCell;
 import com.alan.fengye.bean.WorksCellData;
 import com.alan.fengye.dal.CommentsTableOperation;
+import com.alan.fengye.dal.DrawboardRegardTableOperation;
 import com.alan.fengye.dal.DrawboardTableOperation;
 import com.alan.fengye.dal.ForwardsTableOperation;
 import com.alan.fengye.dal.LikesTableOperation;
@@ -24,21 +25,23 @@ public class PersonalCenterDetailDrawboard {
 	private final static String PICREALPATH = "C:\\Users\\Alan\\Desktop\\p";
 	
 	private Vector<WorksCellData> detailDrawbData;
+	private boolean isAttention;
 	
 	public PersonalCenterDetailDrawboard()
 	{
 		this.detailDrawbData = new Vector<WorksCellData>();
+		isAttention = false;
 	} 
 	
-	public void getPersonalCenterDetailDrawboardData(String username, String drawboardName)
+	public void getPersonalCenterDetailDrawboardData(String otherUser, String loginUser, String drawName)
 	{
 		//当前用户的用户ID
-		List<Map<String, Object>> list = UserTableOperation.getInstance().queryUsersTable(username);
+		List<Map<String, Object>> list = UserTableOperation.getInstance().queryUsersTable(otherUser);
 		Map<String, Object> map = list.get(0);
 		int userID = Integer.parseInt(String.valueOf(map.get("id"))) ;
 		
 		//拿到画板ID
-		list = DrawboardTableOperation.getInstance().queryDrawboardTableWithUserIDAndDrawName(userID, drawboardName);
+		list = DrawboardTableOperation.getInstance().queryDrawboardTableWithUserIDAndDrawName(userID, drawName);
 		map = list.get(0);
 		int drawboardID = Integer.parseInt(String.valueOf(map.get("id"))) ;
 		
@@ -101,19 +104,18 @@ public class PersonalCenterDetailDrawboard {
 			this.detailDrawbData.addElement(detailDrawb);
 		}
 		
-		//print
-//		for(WorksCellData cell : this.detailDrawbData)
-//		{
-//			System.out.println("\n-------------- PersonalCenterDetailDrawboard -------");
-//			System.out.println(cell.getPicURL());
-//			System.out.println(cell.getPicHeight());
-//			System.out.println(cell.getPicWidth());
-//			System.out.println(cell.getDescriptionText());
-//			System.out.println(cell.getUploadTime());
-//			System.out.println(cell.getLikeCount());
-//			System.out.println(cell.getForwardCount());
-//			System.out.println(cell.getCommentCount());
-//		}
+		//最后一步：查看该模板是否被登录用户所关注
+		//登录用户的用户ID
+		list = UserTableOperation.getInstance().queryUsersTable(loginUser);
+		map = list.get(0);
+		int loginUserID = Integer.parseInt(String.valueOf(map.get("id")));
+
+		list = DrawboardRegardTableOperation.getInstance().queryDrawboardRegardTableWithDrawIDAndUserID(drawboardID, loginUserID);
+		
+		if(list.size() > 0)
+			this.isAttention = true;
+		else
+			this.isAttention = false;
 	}
 	
 	private BufferedImage getPicSize(String picURL)
@@ -140,8 +142,8 @@ public class PersonalCenterDetailDrawboard {
 		return sourceImg;
 	}
 	
-	public int updateDatabaseAddPicture(String username, String drawName, String filePath, String picDesc) {
-		
+	public int updateDatabaseAddPicture(String username, String drawName, String filePath, String picDesc, long curTime) 
+	{
 		int retValue = 0;
 		
 		//拿到登录用户的用户ID
@@ -155,7 +157,7 @@ public class PersonalCenterDetailDrawboard {
 		int drawID = Integer.parseInt(String.valueOf(map.get("id")));
 		
 		//插入works表
-		retValue = WorksTableOperation.getInstance().updateWorksTable(userID, drawID, filePath, picDesc);
+		retValue = WorksTableOperation.getInstance().updateWorksTable(userID, drawID, filePath, picDesc, curTime);
 		
 		return retValue;
 	}
@@ -163,5 +165,10 @@ public class PersonalCenterDetailDrawboard {
 	public Vector<WorksCellData> getDetailDrawbData(){
 		
 		return this.detailDrawbData;
+	}
+	
+	public boolean getIsAttention(){
+		
+		return this.isAttention;
 	}
 }

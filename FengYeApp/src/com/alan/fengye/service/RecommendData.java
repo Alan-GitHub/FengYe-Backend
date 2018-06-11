@@ -34,10 +34,13 @@ public class RecommendData {
 		int drawID = 0;
 		List<Map<String, Object>> templist;
 		Map<String, Object> tempmap;
+		int worksId = 0;
+		int userID = 0;
 		for(Map<String, Object> map : list)
 		{
 			WorksCellData cellData = new WorksCellData();
 			
+			//路径
 			cellData.setPicURL(String.valueOf(map.get("path")));
 			
 			//拿到画板名
@@ -46,47 +49,45 @@ public class RecommendData {
 			tempmap = templist.get(0);
 			cellData.setTemplateName(String.valueOf(tempmap.get("Name")));
 			
+			//描述
 			cellData.setDescriptionText(String.valueOf(map.get("description")));
+			
+			//上传时间
 			cellData.setUploadTime(Long.valueOf(String.valueOf(map.get("uploadtime"))));
 			
-			this.unitData.addElement(cellData);
-		}
-
-		Map<String, Object> map;
-		int worksId = 0;
-		int userID = 0;
-		for(WorksCellData cell : this.unitData)
-		{
-			list = WorksTableOperation.getInstance().queryWorksTable(cell.getPicURL());
-			map = list.get(0);
+			//作品id
 			worksId = Integer.parseInt(String.valueOf(map.get("id"))) ;
+			//作品所属者的id
 			userID = Integer.parseInt(String.valueOf(map.get("user_id"))) ;
 			
-			list = LikesTableOperation.getInstance().queryLikesTable(worksId);
-			map = list.get(0);
-			cell.setLikeCount(Integer.parseInt(String.valueOf(map.get("numbers"))));
-				
-			list = ForwardsTableOperation.getInstance().queryForwardsTableForCount(worksId);
-			map = list.get(0);
-			cell.setForwardCount(Integer.parseInt(String.valueOf(map.get("numbers"))) );
+			//该作品的喜欢数量
+			templist = LikesTableOperation.getInstance().queryLikesTable(worksId);
+			tempmap = templist.get(0);
+			cellData.setLikeCount(Integer.parseInt(String.valueOf(tempmap.get("numbers"))));
 			
-			list = CommentsTableOperation.getInstance().queryCommentsTable(worksId);
-			map = list.get(0);
-			cell.setCommentCount(Integer.parseInt(String.valueOf(map.get("numbers"))) );
+			//该作品的转发数量
+			templist = ForwardsTableOperation.getInstance().queryForwardsTableForCount(worksId);
+			tempmap = templist.get(0);
+			cellData.setForwardCount(Integer.parseInt(String.valueOf(tempmap.get("numbers"))) );
+			
+			//该作品的评论数量
+			templist = CommentsTableOperation.getInstance().queryCommentsTable(worksId);
+			tempmap = templist.get(0);
+			cellData.setCommentCount(Integer.parseInt(String.valueOf(tempmap.get("numbers"))) );
 
 			//set picture network url 
-			BufferedImage bufferImage = getPicSize(cell);
-			cell.setPicWidth(bufferImage.getWidth());
-			cell.setPicHeight(bufferImage.getHeight());
-			cell.setPicURL(PICDIRPREFIX + cell.getPicURL().replaceAll("_", "/"));
+			BufferedImage bufferImage = getPicSize(cellData);
+			cellData.setPicWidth(bufferImage.getWidth());
+			cellData.setPicHeight(bufferImage.getHeight());
+			cellData.setPicURL(PICDIRPREFIX + cellData.getPicURL().replaceAll("_", "/"));
 			
 			//picture owner and head icon
-			list = UserTableOperation.getInstance().queryUsersTable(userID);
-			map = list.get(0);
-			cell.setOwner(String.valueOf(map.get("username")));
+			templist = UserTableOperation.getInstance().queryUsersTable(userID);
+			tempmap = templist.get(0);
+			cellData.setOwner(String.valueOf(tempmap.get("username")));
+			cellData.setHeadIcon(PICDIRPREFIX + String.valueOf(tempmap.get("head_icon")).replaceAll("_", "/"));
 			
-			//this.unitData[i].setHeadIcon(this.getHeadIconURL(String.valueOf(map.get("head_icon"))));
-			cell.setHeadIcon(PICDIRPREFIX + String.valueOf(map.get("head_icon")).replaceAll("_", "/"));
+			this.unitData.addElement(cellData);
 		}
 	}
 	

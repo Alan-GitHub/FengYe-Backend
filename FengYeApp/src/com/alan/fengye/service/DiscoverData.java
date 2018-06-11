@@ -68,12 +68,15 @@ public class DiscoverData {
 		List<Map<String, Object>> list = WorksTableOperation.getInstance().queryWorksTable();
 		
 		int drawID = 0;
+		int worksId = 0;
+		int userID = 0;
 		List<Map<String, Object>> templist;
 		Map<String, Object> tempmap;
 		for(Map<String, Object> map : list)
 		{	
 			WorksCellData workCell = new WorksCellData();
 			
+			//路径
 			workCell.setPicURL(String.valueOf(map.get("path")));
 			
 			//拿到画板名
@@ -82,69 +85,45 @@ public class DiscoverData {
 			tempmap = templist.get(0);
 			workCell.setTemplateName(String.valueOf(tempmap.get("Name")));
 			
+			//描述
 			workCell.setDescriptionText(String.valueOf(map.get("description")));
+			
+			//上传时间
 			workCell.setUploadTime(Long.valueOf(String.valueOf(map.get("uploadtime"))));
+			
+			//作品id
+			worksId = Integer.parseInt(String.valueOf(map.get("id"))) ;
+			//作品所属用户id
+			userID = Integer.parseInt(String.valueOf(map.get("user_id"))) ;
+			
+			//作品的喜欢数量
+			templist = LikesTableOperation.getInstance().queryLikesTable(worksId);
+			tempmap = templist.get(0);
+			workCell.setLikeCount(Integer.parseInt(String.valueOf(tempmap.get("numbers"))));
+			
+			//作品的转发数量
+			templist = ForwardsTableOperation.getInstance().queryForwardsTableForCount(worksId);
+			tempmap = templist.get(0);
+			workCell.setForwardCount(Integer.parseInt(String.valueOf(tempmap.get("numbers"))) );
+			
+			templist = CommentsTableOperation.getInstance().queryCommentsTable(worksId);
+			tempmap = templist.get(0);
+			workCell.setCommentCount(Integer.parseInt(String.valueOf(tempmap.get("numbers"))) );
+
+			//set picture network url 
+			BufferedImage bufferImage = getPicSize(workCell.getPicURL().replaceAll("_", "/"));
+			workCell.setPicWidth(bufferImage.getWidth());
+			workCell.setPicHeight(bufferImage.getHeight());
+			workCell.setPicURL(PICDIRPREFIX + workCell.getPicURL().replaceAll("_", "/"));
+			
+			//picture owner and head icon
+			templist = UserTableOperation.getInstance().queryUsersTable(userID);
+			tempmap = templist.get(0);
+			workCell.setOwner(String.valueOf(tempmap.get("username")));
+			workCell.setHeadIcon(PICDIRPREFIX + String.valueOf(tempmap.get("head_icon")).replaceAll("_", "/"));
 			
 			this.worksUnitData.addElement(workCell);
 		}
-
-		Map<String, Object> map;
-		int worksId = 0;
-		int userID = 0;
-		for(WorksCellData cell : this.worksUnitData)
-		{
-			list = WorksTableOperation.getInstance().queryWorksTable(cell.getPicURL());
-			map = list.get(0);
-			worksId = Integer.parseInt(String.valueOf(map.get("id"))) ;
-			userID = Integer.parseInt(String.valueOf(map.get("user_id"))) ;
-			
-			list = LikesTableOperation.getInstance().queryLikesTable(worksId);
-			map = list.get(0);
-			cell.setLikeCount(Integer.parseInt(String.valueOf(map.get("numbers"))));
-				
-			list = ForwardsTableOperation.getInstance().queryForwardsTableForCount(worksId);
-			map = list.get(0);
-			cell.setForwardCount(Integer.parseInt(String.valueOf(map.get("numbers"))) );
-			
-			list = CommentsTableOperation.getInstance().queryCommentsTable(worksId);
-			map = list.get(0);
-			cell.setCommentCount(Integer.parseInt(String.valueOf(map.get("numbers"))) );
-
-			//set picture network url 
-			BufferedImage bufferImage = getPicSize(cell.getPicURL().replaceAll("_", "/"));
-			cell.setPicWidth(bufferImage.getWidth());
-			cell.setPicHeight(bufferImage.getHeight());
-			cell.setPicURL(PICDIRPREFIX + cell.getPicURL().replaceAll("_", "/"));
-			
-			//picture owner and head icon
-			list = UserTableOperation.getInstance().queryUsersTable(userID);
-			map = list.get(0);
-			cell.setOwner(String.valueOf(map.get("username")));
-			
-			//this.unitData[i].setHeadIcon(this.getHeadIconURL(String.valueOf(map.get("head_icon"))));
-			cell.setHeadIcon(PICDIRPREFIX + String.valueOf(map.get("head_icon")).replaceAll("_", "/"));
-		}
-		
-		//print
-//		for(WorksCellData cell : this.worksUnitData)
-//		{
-//			System.out.println("getPicturePath=" + cell.getPicURL());
-//			System.out.println("getPicWidth=" + cell.getPicWidth());
-//			System.out.println("getPicHeight=" + cell.getPicHeight());
-//		
-//			System.out.println("getUploadTime=" + cell.getUploadTime());
-//			System.out.println("getForwardCount=" + cell.getForwardCount());
-//			System.out.println("getLikeCount=" + cell.getLikeCount());
-//			System.out.println("getCommentCount=" + cell.getCommentCount());
-//			
-//			System.out.println("getDescription=" + cell.getDescriptionText());
-//			System.out.println("getHeadIcon=" + cell.getHeadIcon());
-//			System.out.println("getTemplate=" + cell.getTemplateName());
-//			System.out.println("getOwner=" + cell.getOwner());
-//			
-//			System.out.println("\n");
-//		}
-		
 	}
 	
 	private BufferedImage getPicSize(String path)

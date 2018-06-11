@@ -99,7 +99,7 @@ public class UserTableOperation {
 	public int updateUsersTable(int userID, String headIconURL)
 	{
 		String sql = "update users set head_icon ='" + headIconURL + "' where id ='" + userID + "';";
-		
+
 		int ret = OperateDataBase.getInstance().generalUpdate(sql);
 		
 		return ret;

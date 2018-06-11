@@ -117,10 +117,10 @@ public class PersonalCenterAttention {
 			//拿到画板的封面图像---画板内部第一张图片
 			listTemp = WorksTableOperation.getInstance().queryWorksTableForConver(drawID);
 			map = listTemp.get(0);
-			drawboardCell.setCoverImageURL(PICDIRPREFIX + String.valueOf(map.get("path")));
+			drawboardCell.setCoverImageURL(PICDIRPREFIX + String.valueOf(map.get("path")).replaceAll("_", "/"));
 			//画板封面图像的宽和高
 			BufferedImage bufferImage;
-			bufferImage = getPicSize(String.valueOf(map.get("path")));
+			bufferImage = getPicSize(String.valueOf(map.get("path")).replaceAll("_", "\\\\"));
 			drawboardCell.setCoverImageWidth(bufferImage.getWidth());
 			drawboardCell.setCoverImageHeight(bufferImage.getHeight());
 			

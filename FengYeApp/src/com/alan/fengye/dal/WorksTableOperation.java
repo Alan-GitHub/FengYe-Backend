@@ -105,11 +105,19 @@ public class WorksTableOperation {
 		return list;
 	}
 	
-	public int updateWorksTable(int userID, int drawID, String picURL, String picDesc)
+	public int updateWorksTable(int userID, int drawID, String picURL, String picDesc, long curTime)
 	{
 		String sql = "insert into works (path, drawboard_id, description, uploadtime, user_id) "
-								+ "values('" + picURL + "', '" + drawID + "', '" + picDesc + "', '201801220004', '" + userID + "');";
+								+ "values('" + picURL + "', '" + drawID + "', '" + picDesc + "', '" + curTime + "', '" + userID + "');";
 	
+		int ret = OperateDataBase.getInstance().generalUpdate(sql);	
+		
+		return ret;
+	}
+	
+	public int updateWorksTableWithDesc(int worksID, String picDesc)
+	{
+		String sql = "update works set description ='" + picDesc + "' where id ='" + worksID + "';";
 		int ret = OperateDataBase.getInstance().generalUpdate(sql);	
 		
 		return ret;

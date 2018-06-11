@@ -5,11 +5,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
 import com.alan.fengye.bean.PersonalCenterDrawboardCell;
+import com.alan.fengye.dal.DrawboardRegardTableOperation;
 import com.alan.fengye.dal.DrawboardTableOperation;
 import com.alan.fengye.dal.UserTableOperation;
 import com.alan.fengye.dal.WorksTableOperation;
@@ -64,10 +66,11 @@ public class PersonalCenterDrawboard {
 			if(listTemp.size() != 0)
 			{
 				map = listTemp.get(0);
-				drawboardCell.setCoverImageURL(PICDIRPREFIX + String.valueOf(map.get("path")));
+				drawboardCell.setCoverImageURL(PICDIRPREFIX + String.valueOf(map.get("path")).replaceAll("_", "/"));
+				
 				//画板封面图像的宽和高
 				BufferedImage bufferImage;
-				bufferImage = getPicSize(String.valueOf(map.get("path")));
+				bufferImage = getPicSize(String.valueOf(map.get("path")).replaceAll("_", "\\\\"));
 				drawboardCell.setCoverImageWidth(bufferImage.getWidth());
 				drawboardCell.setCoverImageHeight(bufferImage.getHeight());
 			}
@@ -78,6 +81,9 @@ public class PersonalCenterDrawboard {
 			drawboardCell.setPicNums(Integer.parseInt(String.valueOf(map.get("numbers"))));
 			
 			//计算画板的关注量(画板的粉丝量) --- 留待日后实现
+			listTemp = DrawboardRegardTableOperation.getInstance().queryDrawboardRegardTableWithDrawIDForCount(drawboardID);
+			map = listTemp.get(0);
+			drawboardCell.setAttentionNum(Integer.parseInt(String.valueOf(map.get("numbers"))));
 			
 			this.selfDrawboardCell.addElement(drawboardCell);
 		}

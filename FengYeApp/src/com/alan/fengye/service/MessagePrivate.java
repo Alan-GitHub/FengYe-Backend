@@ -26,11 +26,13 @@ public class MessagePrivate {
 		int userID = Integer.parseInt(String.valueOf(map.get("id")));
 
 		//拿到所有的留言用户(可能包含重复用户)
-		list = MessagePrivateTableOperation.getInstance().queryMessagePrivateTableWithReceiveUserID(userID);
+		//list = MessagePrivateTableOperation.getInstance().queryMessagePrivateTableWithReceiveUserID(userID);
+		
+		//返回给登录用户发送私信的用户id集合
+		list = MessagePrivateTableOperation.getInstance().queryMessagePrivateTableWithReceiveUserIDReturnSendUserIDNums(userID);
 		
 		//拿到各项子数据
 		List<Map<String, Object>> listTemp;
-		Map<String, Object> mapTemp;
 		int sendUserID = 0;
 		for(int i = 0; i < list.size(); i++)
 		{
@@ -39,14 +41,9 @@ public class MessagePrivate {
 			//拿到发送私信用户的用户ID
 			sendUserID = Integer.parseInt(String.valueOf(map.get("send_user_id")));
 			
-			if(i+1 < list.size())
-			{
-				mapTemp = list.get(i+1);
-				int nextSendUserID = Integer.parseInt(String.valueOf(mapTemp.get("send_user_id")));
-				if(sendUserID == nextSendUserID)
-					continue;
-			}
-				
+			listTemp = MessagePrivateTableOperation.getInstance().queryMessagePrivateTableWithSendAndRecvUserIDGetLastestRecord(sendUserID, userID);
+			map = listTemp.get(0);
+	
 			CommentMessageData privMsgData = new CommentMessageData();
 			
 			//获取私信内容
@@ -63,16 +60,6 @@ public class MessagePrivate {
 			
 			this.allPrivMsg.addElement(privMsgData);
 		}
-		
-		//print
-//		for(CommentMessageData privMsg : this.allPrivMsg)
-//		{
-//			System.out.println("\n-------------- MessagePrivate -------");
-//			System.out.println(privMsg.getCommentUserHeadIconUrl());
-//			System.out.println(privMsg.getCommentUsername());
-//			System.out.println(privMsg.getCommentContent());
-//			System.out.println(privMsg.getCommentTime());
-//		}
 	}
 	
 	public Vector<CommentMessageData> getAllPrivMsg(){

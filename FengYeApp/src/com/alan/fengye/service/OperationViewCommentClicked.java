@@ -63,16 +63,35 @@ public class OperationViewCommentClicked {
 			
 			this.allComments.addElement(commentData);
 		}
+	}
+	
+	public int operationViewCommentAddComment(String commentUser, String commentContent, String ownUser, String ownDrawbard, String picURL, long curTime)
+	{
+		int retValue = 0;
 		
-		//print
-//		for(CommentMessageData comm : this.allComments)
-//		{
-//			System.out.println("\n-------------- OperationViewCommentClicked -------");
-//			System.out.println(comm.getCommentUserHeadIconUrl());
-//			System.out.println(comm.getCommentUsername());
-//			System.out.println(comm.getCommentContent());
-//			System.out.println(comm.getCommentTime());
-//		}
+		//拿到作品所属用户的ID
+		List<Map<String, Object>> list = UserTableOperation.getInstance().queryUsersTable(ownUser);
+		Map<String, Object> map = list.get(0);
+		int ownUserID = Integer.parseInt(String.valueOf(map.get("id")));
+		
+		//拿到作品所属画板的ID
+		list = DrawboardTableOperation.getInstance().queryDrawboardTableWithUserIDAndDrawName(ownUserID, ownDrawbard);
+		map = list.get(0);
+		int ownDrawID = Integer.parseInt(String.valueOf(map.get("id")));
+		
+		//拿到图片的作品ID
+		list = WorksTableOperation.getInstance().queryWorksTableWithPathAndDrawID(picURL, ownDrawID);
+		map = list.get(0);
+		int worksID = Integer.parseInt(String.valueOf(map.get("id")));
+		
+		//拿到评论作品的用户的ID
+		list = UserTableOperation.getInstance().queryUsersTable(commentUser);
+		map = list.get(0);
+		int commentUserID = Integer.parseInt(String.valueOf(map.get("id")));
+		
+		retValue = CommentsTableOperation.getInstance().updateCommentsTableAddComment(commentContent, commentUserID, worksID, curTime);
+		
+		return retValue;
 	}
 	
 	public Vector<CommentMessageData> getAllComments(){

@@ -11,6 +11,8 @@ public class PersonalCenterHeaderData {
 	private String headIconURL;
 	private String username;
 	
+	private boolean isAttention;
+	
 	public PersonalCenterHeaderData() 
 	{
 		this.drawboardNum = 0;
@@ -20,6 +22,7 @@ public class PersonalCenterHeaderData {
 		this.fansNum = 0;
 		this.headIconURL = "";
 		this.username = "";
+		this.isAttention = false;
 	}
 	
 	public int getDrawboardNum()
@@ -90,5 +93,15 @@ public class PersonalCenterHeaderData {
 	public void setUsername(String name)
 	{
 		this.username = name;
+	}
+	
+	public boolean getIsAttention()
+	{
+		return this.isAttention;
+	}
+	
+	public void setIsAttention(boolean isAttention)
+	{
+		this.isAttention = isAttention;
 	}
 }

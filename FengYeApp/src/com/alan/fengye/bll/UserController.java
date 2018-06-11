@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
@@ -64,23 +65,27 @@ public class UserController extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-		//String str = JSONObject.toJSONString(request);
-		//System.out.println("request= " + str);
+		
+		//插入作品的时候，可以将当前时间new Date().getTime()插入数据库
+		//SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+		//String date = df.format(new Date().getTime());// new Date()为获取当前系统时间，也可使用当前时间戳
 
+		//生成当前时间
+		Calendar time = Calendar.getInstance();
+		
 		//判断是否是表单文件类型
 		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 		//处理文件上传
 		if(isMultipart){
 
 			ServiceForPictureUpload picUpload = new ServiceForPictureUpload();
-			picUpload.savePicToServer(request, response);
+			picUpload.savePicToServer(request, response, time.getTimeInMillis());
 			return;
 		}
 		
 		//其他情况
 		BaseResponse baseResponse=new BaseResponse(ReturnCode.SERVICEEXCEPTION.getCode(),ReturnCode.SERVICEEXCEPTION.getDesc());
 		BaseRequest baseRequest=null;
-		Calendar time = Calendar.getInstance();
 		Long newTime=null;
 		JSONObject object=null;
 		try {
@@ -98,10 +103,9 @@ public class UserController extends HttpServlet {
 			e.printStackTrace();
 		}
 		if(time.getTimeInMillis()>newTime) {
-			
 			ServiceEntry serviceEntry = new ServiceEntry();
 			serviceEntry.handleRequest(JSONObject.parseObject(object.getString("data")), 
-					baseRequest, baseResponse, response);
+					baseRequest, baseResponse, response, time.getTimeInMillis());
 		}else {
 			
 			baseResponse.setReturnCode(ReturnCode.TIMEOUT.getCode());
@@ -109,9 +113,5 @@ public class UserController extends HttpServlet {
 			baseResponse.setReturnBiz(baseRequest.getBiz());
 			JsonReader.responseJson(response, baseResponse);
 		}
-		
-		
-//		UserVo student=new UserVo("叶志勇","21");
-//		JsonReader.responseJson(response, student);
 	}
 }

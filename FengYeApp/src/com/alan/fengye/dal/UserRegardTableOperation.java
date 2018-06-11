@@ -50,4 +50,31 @@ public class UserRegardTableOperation {
 		
 		return list;
 	}
+	
+	public List<Map<String, Object>> queryUserRegardTableWithRegardIDAndSelfID(int regardID, int selfID)
+	{
+		String sql = "select * from user_regard where regard_user_id='" + regardID + "' && self_user_id='" + selfID +"';";
+		List<Map<String, Object>> list = OperateDataBase.getInstance().generalQuery(sql);
+		
+		return list;
+	}
+	
+	public int updateUserRegardTableAddItem(int loginUserID, int otherUserID, long curTime)
+	{
+		String sql = "insert into user_regard (regard_user_id, self_user_id, regard_time) values('" 
+				+ otherUserID + "', '" + loginUserID + "', '" + curTime + "');";
+
+		int ret = OperateDataBase.getInstance().generalUpdate(sql);	
+		
+		return ret;
+	}
+	
+	public int updateUserRegardTableDelItem(int loginUserID, int otherUserID)
+	{
+		String sql = "delete from user_regard where regard_user_id='" + otherUserID + "' && self_user_id='" + loginUserID + "';";
+
+		int ret = OperateDataBase.getInstance().generalUpdate(sql);	
+		
+		return ret;
+	}
 }

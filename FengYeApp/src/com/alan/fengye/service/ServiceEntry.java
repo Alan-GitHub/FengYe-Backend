@@ -25,7 +25,7 @@ import com.alibaba.fastjson.JSONObject;
 public class ServiceEntry {
 	
 	public void handleRequest(JSONObject jsonObject, BaseRequest baseRequest, 
-			BaseResponse baseResponse, HttpServletResponse response) {
+			BaseResponse baseResponse, HttpServletResponse response, long curTime) {
 		//注册接口
 		if(ServiceNameEnum.REGISTER.getCode().equals(baseRequest.getService())) {
 			System.out.println("客户端注册...");
@@ -41,57 +41,60 @@ public class ServiceEntry {
 			////////
 			DataBaseReturnCode retCode = UserTableOperation.getInstance().userRegister(name, passwd);
 			
+			int retValue = 0; //返回给客户端
 			switch(retCode) {
-			case REGISTER_SUCCESS:
-			{
-				System.out.println("注册成功！");
-				try {
-					response.getWriter().append("Register successful...");
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			break;
+				case REGISTER_SUCCESS:
+					{
+						System.out.println("注册成功！");
+						retValue = 1;
+					}
+					break;
 			
-			case REGISTER_USERNAME_EXIST:
-			{
-				//用户名已存在
-				System.out.println("用户名已存在");
-				try {
-					response.getWriter().append("The username has existed...");
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			break;
+				case REGISTER_FAIL:
+					{
+						System.out.println("注册失败...");
+						retValue = -1;
+					}
+					break;
 				
-			case REGISTER_FAIL:
-			{
-				System.out.println("注册失败...");
-				try {
-					response.getWriter().append("Register failure...");
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}
-			break;
-				
-			default:
-				System.out.println("注册发生未知情况...");
+				case REGISTER_USERNAME_EXIST:
+					{
+						//用户名已存在
+						System.out.println("用户名已存在");
+						retValue = -2;
+					}
+					break;
+
+				default:
+					System.out.println("注册发生未知情况...");
 				
 			}	
+			
+			//返回JSON字符串给客户端
+			JSONObject obj = new JSONObject();
+			obj.put("retValue", retValue);
+
+			String str = JSONObject.toJSONString(obj);
+		    response.setCharacterEncoding("UTF-8");  
+		    response.setContentType("application/json; charset=utf-8");  
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+		    out.append(str); 
+		    out.close();
 		}
 		//登录接口
 		else if(ServiceNameEnum.LOGIN.getCode().equals(baseRequest.getService())) {
-			
 			System.out.println("客户端登录...");
 			
 			String name = jsonObject.getString("loginName").trim();
 			String passwd = jsonObject.getString("loginPassword").trim();
+			
+			System.out.println("name=" + name);
 			
 			UserLoginVO userLoginInfo = new UserLoginVO(name, passwd);
 			
@@ -101,54 +104,48 @@ public class ServiceEntry {
 			
 			DataBaseReturnCode retCode = UserTableOperation.getInstance().userLogin(name, passwd);
 			
+			int loginStatus = 0;
+			switch(retCode) {
+				case LOGIN_SUCCESS:
+					{
+						System.out.println("登录成功...");
+						loginStatus = 1; //successful
+					}
+					break;
+			
+				case LOGIN_USER_NOEXIST:
+					{
+						System.out.println("登录名不存在...");
+						loginStatus = -1;  //login name is not exist
+					}
+					break;
+			
+				case LOGIN_PASSWD_ERROR:
+					{
+						System.out.println("登录密码错误...");
+						loginStatus = -2;  //password error
+					}
+					break;
+			
+				default:
+					System.out.println("登录发生未知情况...");
+			}
+			
 			JSONObject jsonRet = new JSONObject();
+			jsonRet.put("loginStatus", loginStatus);
+			
+			String str = JSONObject.toJSONString(jsonRet);
 		    response.setCharacterEncoding("UTF-8");  
 		    response.setContentType("application/json; charset=utf-8");  
-			
-			switch(retCode) {
-			case LOGIN_SUCCESS:
-			{
-				System.out.println("登录成功...");
-				jsonRet.put("loginStatus", 0); //successful
-				try {
-					response.getWriter().append(jsonRet.toString());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			break;
-			
-			case LOGIN_USER_NOEXIST:
-			{
-				System.out.println("登录名不存在...");
-				jsonRet.put("loginStatus", 1);  //login name is not exist
-				try {
-					response.getWriter().append(jsonRet.toString());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			break;
-			
-			case LOGIN_PASSWD_ERROR:
-			{
-				System.out.println("登录密码错误...");
-				jsonRet.put("loginStatus", 2);  //password error
-				try {
-					response.getWriter().append(jsonRet.toString());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			break;
-			
-			default:
-				System.out.println("登录发生未知情况...");
-			}
-			
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+		    out.append(str); 
+		    out.close();
 		}
 		//推荐接口
 		else if(ServiceNameEnum.RECOMMEND.getCode().equals(baseRequest.getService())) {
@@ -193,9 +190,10 @@ public class ServiceEntry {
 
 			System.out.println("选择兴趣组数据...");
 			String groupName = jsonObject.getString("clickedInrstGroupName");
+			String loginUser = jsonObject.getString("loginUser");
 			
 			InterestGroupDetailData groupDetailData = new InterestGroupDetailData();
-			groupDetailData.getInterestGroupDetailData(groupName);
+			groupDetailData.getInterestGroupDetailData(groupName, loginUser);
 			String strGroupDetailData = JSONObject.toJSONString(groupDetailData);
 			
 			DiscoverData discData = new DiscoverData();
@@ -208,9 +206,7 @@ public class ServiceEntry {
 			JSONObject jsonObj = new JSONObject();
 			jsonObj.putAll(jsonObj1);
 			jsonObj.putAll(jsonObj2);
-			
-//			System.out.println(jsonObj.toString());
-			
+
 		    response.setCharacterEncoding("UTF-8");  
 		    response.setContentType("application/json; charset=utf-8");  
 		    PrintWriter out = null;  
@@ -223,16 +219,53 @@ public class ServiceEntry {
 		    out.append(jsonObj.toString());
 		    out.close();
 		}
+		//关注或者取消关注兴趣组
+		else if(ServiceNameEnum.INTEREST_GROUP_REGARD_OR_NOT.getCode().equals(baseRequest.getService())) {
+
+			System.out.println("关注或者取消关注兴趣组...");
+			
+			String loginUser = jsonObject.getString("loginUser");
+			String groupName = jsonObject.getString("groupName");
+			String regardOrNot = jsonObject.getString("regardOrNot");
+			
+			System.out.println(loginUser);
+			System.out.println(groupName);
+			System.out.println(regardOrNot);
+			
+			InterestGroupDetailData groupDetailData = new InterestGroupDetailData();
+			int retCode = groupDetailData.updateDataBaseRegardOrNotInterestGroup(loginUser, groupName, regardOrNot);
+			
+			JSONObject obj = new JSONObject();
+			obj.put("retCode", retCode);
+			
+			String str = JSONObject.toJSONString(obj);
+		    response.setCharacterEncoding("UTF-8");  
+		    response.setContentType("application/json; charset=utf-8");  
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				} 
+		    out.append(str);
+		    out.close();
+		}
 		//个人中心
 		else if(ServiceNameEnum.PERSONALCENTER.getCode().equals(baseRequest.getService())) {
 			
 			System.out.println("个人中心");
-			String username = jsonObject.getString("username");
+			String otherUser = jsonObject.getString("otherUser");
+			String loginUser = jsonObject.getString("loginUser");
 			
-			System.out.println("username=" + username);
+			System.out.println("otherUser=" + otherUser);
+			System.out.println("loginUser=" + loginUser);
+			
+			if(otherUser == null)
+				otherUser = loginUser;
 			
 			PersonalCenter pc = new PersonalCenter();
-			pc.getPersonalCenterData(username);
+			pc.getPersonalCenterData(otherUser, loginUser);
 			
 			String str = JSONObject.toJSONString(pc);
 		    response.setCharacterEncoding("UTF-8");  
@@ -302,6 +335,8 @@ public class ServiceEntry {
 			String drawboardName = jsonObject.getString("drawboardName");
 			String drawboardDesc = jsonObject.getString("drawboardDesc");
 			
+			System.out.println("drawboardName=" + drawboardName);
+			
 			PersonalCenterAddDrawboard pcAddDrawboard = new PersonalCenterAddDrawboard();
 			DataBaseReturnCode retCode= pcAddDrawboard.addDrawboard(username, drawboardName, drawboardDesc);
 			
@@ -330,16 +365,74 @@ public class ServiceEntry {
 		//个人中心--详细画板
 		else if(ServiceNameEnum.PERSONALCENTER_DETAILDRAWBOARD.getCode().equals(baseRequest.getService())) {
 			System.out.println("个人中心--详细画板...");
-			String username = jsonObject.getString("username");
-			String drawboardName = jsonObject.getString("drawboardName");
 			
-			System.out.println("username=" + username);
-			System.out.println("drawboardName=" + drawboardName);
+			String otherUser = jsonObject.getString("otherUser");
+			String loginUser = jsonObject.getString("loginUser");
+			String drawName = jsonObject.getString("drawName");
+			
+			if(null == otherUser)
+				otherUser = loginUser;
 
 			PersonalCenterDetailDrawboard data = new PersonalCenterDetailDrawboard();
-			data.getPersonalCenterDetailDrawboardData(username, drawboardName);
+			data.getPersonalCenterDetailDrawboardData(otherUser, loginUser, drawName);
 		
 			String str = JSONObject.toJSONString(data);
+		    response.setCharacterEncoding("UTF-8");  
+		    response.setContentType("application/json; charset=utf-8");  
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				} 
+		    out.append(str); 
+		    out.close();
+		}	
+		//个人中心--详细画板--关注或者取消关注
+		else if(ServiceNameEnum.DRAWBOARD_REGARD_OR_NOT.getCode().equals(baseRequest.getService())) {
+			System.out.println("个人中心--详细画板--关注或者取消关注...");
+			
+			String loginUser = jsonObject.getString("loginUser");
+			String drawOwnerUser = jsonObject.getString("drawOwnerUser");
+			String drawName = jsonObject.getString("drawName");
+			String regardOrNot = jsonObject.getString("regardOrNot");
+
+			AttentionCommon common = new AttentionCommon();
+			int retCode = common.updateDataBaseRegardOrNotDrawboard(drawName, drawOwnerUser, loginUser, regardOrNot);
+		
+			JSONObject obj = new JSONObject();
+			obj.put("retCode", retCode);
+			
+			String str = JSONObject.toJSONString(obj);
+		    response.setCharacterEncoding("UTF-8");  
+		    response.setContentType("application/json; charset=utf-8");  
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				} 
+		    out.append(str); 
+		    out.close();
+		}
+		//个人中心--详细画板--添加作品信息   暂时只添加描述信息
+		else if(ServiceNameEnum.WORKS_ADD_INFO.getCode().equals(baseRequest.getService())) {
+			System.out.println("个人中心--详细画板--添加作品信息...");
+			String owner = jsonObject.getString("owner");
+			String drawName = jsonObject.getString("drawName");
+			String picURL = jsonObject.getString("picURL");
+			String picDesc = jsonObject.getString("picDesc");
+
+			WorksAddInfo worksInfo = new WorksAddInfo();
+			picURL = picURL.replaceAll("/",	"_");
+			int retCode = worksInfo.updateDataBaseAddInfoForWorks(owner, drawName, picURL, picDesc);
+		
+			JSONObject obj = new JSONObject();
+			obj.put("retCode", retCode);
+			
+			String str = JSONObject.toJSONString(obj);
 		    response.setCharacterEncoding("UTF-8");  
 		    response.setContentType("application/json; charset=utf-8");  
 		    PrintWriter out = null;  
@@ -420,6 +513,37 @@ public class ServiceEntry {
 		    out.append(str); 
 		    out.close();
 		}
+		//用户 -- 关注或者取消关注
+		else if(ServiceNameEnum.USER_REGARD_OR_NOT.getCode().equals(baseRequest.getService())) {
+			
+			System.out.println("用户 -- 关注或者取消关注...");
+			String loginUser = jsonObject.getString("loginUser");
+			String regardedUser = jsonObject.getString("regardedUser");
+			String regardOrNot = jsonObject.getString("regardOrNot");
+			
+			System.out.println(loginUser);
+			System.out.println(regardedUser);
+			System.out.println(regardOrNot);
+			
+			AttentionCommon common = new AttentionCommon();
+			int retCode = common.updateDataBaseRegardOrNotUser(loginUser, regardedUser, regardOrNot, curTime);
+			
+			JSONObject obj = new JSONObject();
+			obj.put("retCode", retCode);
+			
+			String str = JSONObject.toJSONString(obj);
+		    response.setCharacterEncoding("UTF-8");  
+		    response.setContentType("application/json; charset=utf-8");  
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				} 
+		    out.append(str); 
+		    out.close();
+		}
 		/* Operation View Button Action */
 		//作品详情  -- 喜欢或者不喜欢该作品
 		else if(ServiceNameEnum.OPERATION_WORKS_LIKEORNOT.getCode().equals(baseRequest.getService())) {
@@ -430,6 +554,7 @@ public class ServiceEntry {
 			String isLike = jsonObject.getString("isLike");
 			
 			DetailWorksLikeOrNot detailWorks = new DetailWorksLikeOrNot();
+			picURL = picURL.replaceAll("/", "_");
 			detailWorks.updateWorksLikeOrNot(username, picURL, isLike);
 			
 			String str = JSONObject.toJSONString(detailWorks);
@@ -452,6 +577,7 @@ public class ServiceEntry {
 			String picPath = jsonObject.getString("path");
 
 			OperationViewLikeClicked operViewLike = new OperationViewLikeClicked();
+			picPath = picPath.replaceAll("/", "_");
 			operViewLike.getOperationViewLikeClickedData(picPath);
 			
 			String str = JSONObject.toJSONString(operViewLike);
@@ -471,10 +597,10 @@ public class ServiceEntry {
 		else if(ServiceNameEnum.OPERATION_WORKS_COLLECTION_SELECT_DRAWNAME.getCode().equals(baseRequest.getService())) {
 			
 			System.out.println("采集某个作品到自己画板-- 选择画板名字...");
-			String username = jsonObject.getString("username");
+			String loginUser = jsonObject.getString("loginUser");
 
 			DetailWorksCollecSelectDrawName detailWorks = new DetailWorksCollecSelectDrawName();
-			detailWorks.getLoginUserAllDrawboardName(username);
+			detailWorks.getLoginUserAllDrawboardName(loginUser);
 			
 			String str = JSONObject.toJSONString(detailWorks);
 		    response.setCharacterEncoding("UTF-8");  
@@ -501,7 +627,9 @@ public class ServiceEntry {
 			String originDrawName = jsonObject.getString("originDrawName");
 			
 			DetailWorksCollecAction colleAction = new DetailWorksCollecAction();
-			colleAction.collectionPicture(originUsername, originDrawName, username, drawName, picURL, picDesc);
+			//转换客户端传过来的图片名字格式
+			picURL = picURL.replaceAll("/", "_");
+			colleAction.collectionPicture(originUsername, originDrawName, username, drawName, picURL, picDesc, curTime);
 		
 			String str = JSONObject.toJSONString(colleAction);
 		    response.setCharacterEncoding("UTF-8");  
@@ -526,6 +654,8 @@ public class ServiceEntry {
 			String picPath = jsonObject.getString("path");
 
 			OperationViewForwardClicked operViewForward = new OperationViewForwardClicked();
+			//转换客户端传过来的图片名字格式
+			picPath = picPath.replaceAll("/", "_");
 			operViewForward.getOperationViewForwardClickedData(username, drawName, picPath);
 			
 			String str = JSONObject.toJSONString(operViewForward);
@@ -549,15 +679,45 @@ public class ServiceEntry {
 			String username = jsonObject.getString("username");
 			String drawName = jsonObject.getString("drawName");
 			String picPath = jsonObject.getString("path");
-			
-			System.out.println(username);
-			System.out.println(drawName);
-			System.out.println(picPath);
 
 			OperationViewCommentClicked operViewComment = new OperationViewCommentClicked();
+			picPath = picPath.replaceAll("/", "_");
 			operViewComment.getOperationViewCommentClickedData(username, drawName, picPath);
 			
 			String str = JSONObject.toJSONString(operViewComment);
+		    response.setCharacterEncoding("UTF-8");  
+		    response.setContentType("application/json; charset=utf-8");  
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				} 
+		    out.append(str); 
+		    out.close();
+		}
+		//给某个图片作品添加评论
+		else if(ServiceNameEnum.OPERATION_WORKS_ADDCOMMENT.getCode().equals(baseRequest.getService())) {
+			
+			System.out.println("给某个图片作品添加评论...");
+			
+			String ownUser = jsonObject.getString("ownUser");
+			String ownDrawboard = jsonObject.getString("ownDrawboard");
+			String picPath = jsonObject.getString("path");
+			String commentContent = jsonObject.getString("commentContent");
+			String commentUser = jsonObject.getString("commentUser");
+
+			OperationViewCommentClicked operViewComment = new OperationViewCommentClicked();
+			picPath = picPath.replaceAll("/", "_");
+			int retValue = operViewComment.operationViewCommentAddComment(commentUser, commentContent, ownUser, ownDrawboard, picPath, curTime);
+		
+			JSONObject obj = new JSONObject();
+			obj.put("retCode", retValue);
+			//临时取巧方案：获取数据库中的评论时间
+			obj.put("commentTime", curTime);
+	
+			String str = JSONObject.toJSONString(obj);
 		    response.setCharacterEncoding("UTF-8");  
 		    response.setContentType("application/json; charset=utf-8");  
 		    PrintWriter out = null;  
@@ -625,9 +785,39 @@ public class ServiceEntry {
 			String privMsgUsername = jsonObject.getString("privMsgUsername");
 
 			MessagePrivateDetail privContent = new MessagePrivateDetail();
+			System.out.println(loginUsername);
+			System.out.println(privMsgUsername);
 			privContent.getMessagePrivateDetailData(loginUsername, privMsgUsername);
 			
 			String str = JSONObject.toJSONString(privContent);
+		    response.setCharacterEncoding("UTF-8");  
+		    response.setContentType("application/json; charset=utf-8");  
+		    PrintWriter out = null;  
+		    try {
+				out = response.getWriter();
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				} 
+		    out.append(str); 
+		    out.close();
+		}
+		//消息 -- 回复私信内容
+		else if(ServiceNameEnum.MESSAGE_PRIVATE_DETAIL_REPLY.getCode().equals(baseRequest.getService())) {
+			
+			System.out.println("消息 -- 回复私信内容...");
+			
+			String loginUser = jsonObject.getString("loginUsername");
+			String privMsgUser = jsonObject.getString("privMsgUsername");
+			String replyContent = jsonObject.getString("replyContent");
+
+			MessagePrivateDetail privContent = new MessagePrivateDetail();
+			int retValue = privContent.privateMessageReply(replyContent, loginUser, privMsgUser, curTime);
+			
+			JSONObject obj = new JSONObject();
+			obj.put("retCode", retValue);
+			
+			String str = JSONObject.toJSONString(obj);
 		    response.setCharacterEncoding("UTF-8");  
 		    response.setContentType("application/json; charset=utf-8");  
 		    PrintWriter out = null;  

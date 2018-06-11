@@ -60,17 +60,24 @@ public class MessagePrivateDetail {
 			
 			this.privContent.addElement(privContentData);
 		}
+	}
+	
+	public int privateMessageReply(String replyContent, String loginUser, String privMsgUser, long curTime)
+	{
+		int retValue = 0;
+		//拿到登录用户ID
+		List<Map<String, Object>> list = UserTableOperation.getInstance().queryUsersTable(loginUser);
+		Map<String, Object> map = list.get(0);
+		int loginUserID = Integer.parseInt(String.valueOf(map.get("id")));
 		
-		//print
-//		for(CommentMessageData privMsg : this.privContent)
-//		{
-//			System.out.println("\n-------------- MessagePrivateDetail -------");
-//			System.out.println(privMsg.getCommentUserHeadIconUrl());
-//			System.out.println(privMsg.getCommentUsername());
-//			System.out.println(privMsg.getCommentContent());
-//			System.out.println(privMsg.getCommentTime());
-//			System.out.println(privMsg.getMyHeadIconUrl());
-//		}
+		//拿到私信用户ID
+		list = UserTableOperation.getInstance().queryUsersTable(privMsgUser);
+		map = list.get(0);
+		int privMsgUserID = Integer.parseInt(String.valueOf(map.get("id")));
+		
+		retValue = MessagePrivateTableOperation.getInstance().updateMessagePrivateTableAddReplyContent(replyContent, loginUserID, privMsgUserID, curTime);
+	
+		return retValue;
 	}
 	
 	public Vector<CommentMessageData> getPrivContent(){

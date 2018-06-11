@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +25,7 @@ public class ServiceForPictureUpload {
 	
 	private String picBaseDir = "C:\\Users\\Alan\\Desktop\\p";
 	
-	public void savePicToServer(HttpServletRequest request, HttpServletResponse response)
+	public void savePicToServer(HttpServletRequest request, HttpServletResponse response, long curTime)
 	{
 		//1、创建一个DiskFileItemFactory工厂    
         DiskFileItemFactory factory = new DiskFileItemFactory();    
@@ -47,14 +48,28 @@ public class ServiceForPictureUpload {
         
         // 2. 遍历 items:    
         for (FileItem item : items) {   
-            	
+   
             if(item.isFormField()) {  //表单普通域
             	//取到用户名
             	if(item.getFieldName().equalsIgnoreCase("data[username]"))  //比较参数名
-            		username = item.getString();
+            	{
+            		try {
+						username = new String(item.getString().getBytes("iso-8859-1"), "utf-8");
+					} catch (UnsupportedEncodingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            	}
             	//取到画板名
             	else if(item.getFieldName().equalsIgnoreCase("data[drawname]"))
-            		drawName = item.getString();  
+            	{
+            		try {
+						drawName = new String(item.getString().getBytes("iso-8859-1"), "utf-8");
+					} catch (UnsupportedEncodingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} 
+            	}
             	//取到图片类型
             	else if(item.getFieldName().equalsIgnoreCase("data[picType]"))  //比较参数名
             		picType = item.getString();  
@@ -68,7 +83,7 @@ public class ServiceForPictureUpload {
             	//本次上传的是作品图片
             	else if(picType.equalsIgnoreCase("PicTypeWorks")) {
                 	
-                	saveWorksPicToServer(username, drawName, item, response);
+                	saveWorksPicToServer(username, drawName, item, response, curTime);
                 }
             }
         }
@@ -77,12 +92,10 @@ public class ServiceForPictureUpload {
 	//保存头像图片到服务器
 	public void saveHeadIconPicToServer(String username, FileItem item, HttpServletResponse response)
 	{
-		String clientSubmitFileName = item.getName();
+		String clientSubmitFileName = username + "_" + item.getName();
 		
 		String filePathStr = clientSubmitFileName;
         filePathStr = filePathStr.replaceAll("_", "\\\\");
-        
-        System.out.println(filePathStr);
         
         int pos = filePathStr.lastIndexOf("\\");
         String extractFilePath = filePathStr.substring(0, pos);
@@ -157,7 +170,7 @@ public class ServiceForPictureUpload {
 	}
 	
 	//保存作品图片到服务器
-	public void saveWorksPicToServer(String username, String drawName, FileItem item, HttpServletResponse response)
+	public void saveWorksPicToServer(String username, String drawName, FileItem item, HttpServletResponse response, long curTime)
 	{
 		String fileName = item.getName();
 		
@@ -209,7 +222,7 @@ public class ServiceForPictureUpload {
         String picDesc = "";
         
         PersonalCenterDetailDrawboard detailDraw = new PersonalCenterDetailDrawboard();
-        int ret = detailDraw.updateDatabaseAddPicture(username, drawName, filenameWithUsername, picDesc);
+        int ret = detailDraw.updateDatabaseAddPicture(username, drawName, filenameWithUsername, picDesc, curTime);
         
         //以JSON形式返回
         JSONObject obj = new JSONObject();
